@@ -1,148 +1,3 @@
-<script setup>
-import TracksService from "@/services/tracks.service";
-import { message } from "antd";
-import { ref, watchEffect } from "vue";
-
-const products = ref([]);
-const now = ref(new Date());
-const showModal = ref(false);
-const selectedTrack = ref(null);
-const modalType = ref("return"); // Thêm biến để phân biệt loại modal: "return" hoặc "delete"
-
-watchEffect(async () => {
-  const allProducts = await TracksService.getAll();
-  if (!Array.isArray(allProducts.data)) {
-    console.error("API response is not an array:", allProducts.data);
-    products.value = [];
-    return;
-  }
-  console.log("API response:", allProducts.data);
-  products.value = allProducts.data.map((product) => {
-    const borrowedDate = new Date(product.NGAYMUON);
-    const formattedBorrowedDate = isNaN(borrowedDate.getTime())
-      ? "Invalid Date"
-      : borrowedDate.getFullYear() +
-        "-" +
-        (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
-        "-" +
-        borrowedDate.getDate().toString().padStart(2, "0");
-    const returnedDate = product.NGAYTRA
-      ? new Date(product.NGAYTRA).toISOString().split("T")[0]
-      : null; // Định dạng NGAYTRA nếu tồn tại
-    return {
-      id: product._id,
-      reader: product.reader,
-      book: product.book,
-      borroweddate: formattedBorrowedDate,
-      returnedDate: returnedDate, // Thêm trường returnedDate
-    };
-  });
-});
-
-const totalPay = (track) => {
-  const borrowedDate = new Date(track.borroweddate);
-  if (isNaN(borrowedDate.getTime())) {
-    console.error(
-      `Invalid borrowed date for track ${track.id}: ${track.borroweddate}`
-    );
-    return 0;
-  }
-  const endDate = track.returnedDate ? new Date(track.returnedDate) : now.value;
-  const diffTime = Math.abs(endDate.getTime() - borrowedDate.getTime()); // Sửa để dùng endDate
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays * (track.book.DONGIA || 0); // Dùng DONGIA từ book
-};
-
-const openModal = (track, type) => {
-  selectedTrack.value = track;
-  modalType.value = type; // "return" hoặc "delete"
-  showModal.value = true;
-};
-
-const closeModal = () => {
-  showModal.value = false;
-};
-
-const confirmAction = async () => {
-  if (modalType.value === "return") {
-    await markAsReturned(selectedTrack.value);
-  } else if (modalType.value === "delete") {
-    await deleteTrack(selectedTrack.value);
-  }
-  closeModal();
-};
-
-const markAsReturned = async (track) => {
-  try {
-    const res = await TracksService.returnBook(track.id); // Gọi endpoint returnBook
-    if (res.isSuccess === true) {
-      const allProducts = await TracksService.getAll();
-      products.value = allProducts.data.map((product) => {
-        const borrowedDate = new Date(product.NGAYMUON);
-        const formattedBorrowedDate = isNaN(borrowedDate.getTime())
-          ? "Invalid Date"
-          : borrowedDate.getFullYear() +
-            "-" +
-            (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
-            "-" +
-            borrowedDate.getDate().toString().padStart(2, "0");
-        const returnedDate = product.NGAYTRA
-          ? new Date(product.NGAYTRA).toISOString().split("T")[0]
-          : null;
-        return {
-          id: product._id,
-          reader: product.reader,
-          book: product.book,
-          borroweddate: formattedBorrowedDate,
-          returnedDate: returnedDate,
-        };
-      });
-      message.success(res.message);
-    } else {
-      message.error(res.message);
-    }
-  } catch (error) {
-    console.error("Failed to mark book as returned:", error);
-    message.error("Failed to mark book as returned");
-  }
-};
-
-const deleteTrack = async (track) => {
-  try {
-    const res = await TracksService.delete(track.id); // Gọi endpoint delete
-    if (res.isSuccess === true) {
-      const allProducts = await TracksService.getAll();
-      products.value = allProducts.data.map((product) => {
-        const borrowedDate = new Date(product.NGAYMUON);
-        const formattedBorrowedDate = isNaN(borrowedDate.getTime())
-          ? "Invalid Date"
-          : borrowedDate.getFullYear() +
-            "-" +
-            (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
-            "-" +
-            borrowedDate.getDate().toString().padStart(2, "0");
-        const returnedDate = product.NGAYTRA
-          ? new Date(product.NGAYTRA).toISOString().split("T")[0]
-          : null;
-        return {
-          id: product._id,
-          reader: product.reader,
-          book: product.book,
-          borroweddate: formattedBorrowedDate,
-          returnedDate: returnedDate,
-        };
-      });
-      message.success(res.message);
-    } else {
-      message.error(res.message);
-    }
-  } catch (error) {
-    console.error("Failed to delete the track:", error);
-    message.error("Failed to delete the track");
-  }
-};
-</script>
-
 <template>
   <div class="mt-12">
     <div class="px-4 sm:px-0">
@@ -301,3 +156,150 @@ const deleteTrack = async (track) => {
     </div>
   </div>
 </template>
+
+<script setup>
+import TracksService from "@/services/tracks.service";
+import { message } from "antd";
+import { ref, watchEffect } from "vue";
+
+const products = ref([]);
+const now = ref(new Date());
+const showModal = ref(false);
+const selectedTrack = ref(null);
+const modalType = ref("return"); // Thêm biến để phân biệt loại modal: "return" hoặc "delete"
+
+watchEffect(async () => {
+  const allProducts = await TracksService.getAll();
+  if (!Array.isArray(allProducts.data)) {
+    console.error("API response is not an array:", allProducts.data);
+    products.value = [];
+    return;
+  }
+  console.log("API response:", allProducts.data);
+  products.value = allProducts.data.map((product) => {
+    const borrowedDate = new Date(product.NGAYMUON);
+    const formattedBorrowedDate = isNaN(borrowedDate.getTime())
+      ? "Invalid Date"
+      : borrowedDate.getFullYear() +
+        "-" +
+        (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
+        "-" +
+        borrowedDate.getDate().toString().padStart(2, "0");
+    const returnedDate = product.NGAYTRA
+      ? new Date(product.NGAYTRA).toISOString().split("T")[0]
+      : null; // Định dạng NGAYTRA nếu tồn tại
+    return {
+      id: product._id,
+      reader: product.reader,
+      book: product.book,
+      borroweddate: formattedBorrowedDate,
+      returnedDate: returnedDate, // Thêm trường returnedDate
+    };
+  });
+});
+
+const totalPay = (track) => {
+  const borrowedDate = new Date(track.borroweddate);
+  if (isNaN(borrowedDate.getTime())) {
+    console.error(
+      `Invalid borrowed date for track ${track.id}: ${track.borroweddate}`
+    );
+    return 0;
+  }
+  const endDate = track.returnedDate ? new Date(track.returnedDate) : now.value;
+  const diffTime = Math.abs(endDate.getTime() - borrowedDate.getTime());
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const calculatedPay = diffDays * (track.book.DONGIA || 0);
+  // Nếu calculatedPay bằng 0, trả về giá thuê 1 ngày
+  return calculatedPay === 0 ? track.book.DONGIA || 0 : calculatedPay;
+};
+
+const openModal = (track, type) => {
+  selectedTrack.value = track;
+  modalType.value = type; // "return" hoặc "delete"
+  showModal.value = true;
+};
+
+const closeModal = () => {
+  showModal.value = false;
+};
+
+const confirmAction = async () => {
+  if (modalType.value === "return") {
+    await markAsReturned(selectedTrack.value);
+  } else if (modalType.value === "delete") {
+    await deleteTrack(selectedTrack.value);
+  }
+  closeModal();
+};
+
+const markAsReturned = async (track) => {
+  try {
+    const res = await TracksService.returnBook(track.id); // Gọi endpoint returnBook
+    if (res.isSuccess === true) {
+      const allProducts = await TracksService.getAll();
+      products.value = allProducts.data.map((product) => {
+        const borrowedDate = new Date(product.NGAYMUON);
+        const formattedBorrowedDate = isNaN(borrowedDate.getTime())
+          ? "Invalid Date"
+          : borrowedDate.getFullYear() +
+            "-" +
+            (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
+            "-" +
+            borrowedDate.getDate().toString().padStart(2, "0");
+        const returnedDate = product.NGAYTRA
+          ? new Date(product.NGAYTRA).toISOString().split("T")[0]
+          : null;
+        return {
+          id: product._id,
+          reader: product.reader,
+          book: product.book,
+          borroweddate: formattedBorrowedDate,
+          returnedDate: returnedDate,
+        };
+      });
+      message.success(res.message);
+    } else {
+      message.error(res.message);
+    }
+  } catch (error) {
+    console.error("Failed to mark book as returned:", error);
+    message.error("Failed to mark book as returned");
+  }
+};
+
+const deleteTrack = async (track) => {
+  try {
+    const res = await TracksService.delete(track.id); // Gọi endpoint delete
+    if (res.isSuccess === true) {
+      const allProducts = await TracksService.getAll();
+      products.value = allProducts.data.map((product) => {
+        const borrowedDate = new Date(product.NGAYMUON);
+        const formattedBorrowedDate = isNaN(borrowedDate.getTime())
+          ? "Invalid Date"
+          : borrowedDate.getFullYear() +
+            "-" +
+            (borrowedDate.getMonth() + 1).toString().padStart(2, "0") +
+            "-" +
+            borrowedDate.getDate().toString().padStart(2, "0");
+        const returnedDate = product.NGAYTRA
+          ? new Date(product.NGAYTRA).toISOString().split("T")[0]
+          : null;
+        return {
+          id: product._id,
+          reader: product.reader,
+          book: product.book,
+          borroweddate: formattedBorrowedDate,
+          returnedDate: returnedDate,
+        };
+      });
+      message.success(res.message);
+    } else {
+      message.error(res.message);
+    }
+  } catch (error) {
+    console.error("Failed to delete the track:", error);
+    message.error("Failed to delete the track");
+  }
+};
+</script>

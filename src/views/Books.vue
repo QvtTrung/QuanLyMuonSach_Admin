@@ -224,7 +224,7 @@ const addBook = async () => {
               class="h-full w-full object-cover object-center lg:h-full lg:w-full"
             />
           </div>
-          <div class="mt-4 flex justify-between">
+          <div class="mt-4 px-3 flex justify-between">
             <div>
               <h3 class="text-sm text-gray-500">
                 <a :href="product.href">
@@ -232,7 +232,11 @@ const addBook = async () => {
                     aria-hidden="true"
                     class="absolute inset-0 truncate"
                   ></span>
-                  {{ product.TENSACH }}
+                  <p
+                    class="mt-1 text-sm font-semibold text-black w-[250px] truncate"
+                  >
+                    {{ product.TENSACH }}
+                  </p>
                 </a>
               </h3>
               <p class="mt-1 text-sm text-gray-700">{{ product.TACGIA }}</p>

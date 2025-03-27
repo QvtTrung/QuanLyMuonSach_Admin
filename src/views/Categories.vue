@@ -144,15 +144,15 @@ const mobileFiltersOpen = ref(false);
         <div class="border-2 border-gray-500 p-4 rounded-xl mx-auto">
           <h3
             v-if="store.state.user != null"
-            class="text-2xl font-semibold tracking-tight text-gray-900"
+            class="text-lg font-semibold tracking-tight text-gray-900"
           >
-            Name: {{ store.state.user.HoTenNV }}
+            Tên nhân viên: {{ store.state.user.HoTenNV }}
           </h3>
           <h3
             v-if="store.state.user != null"
-            class="text-2xl font-semibold tracking-tight text-gray-900"
+            class="text-lg font-semibold tracking-tight text-gray-900"
           >
-            Position: {{ store.state.user.ChucVu }}
+            Chức vụ: {{ store.state.user.ChucVu }}
           </h3>
           <div class="text-center">
             <button
