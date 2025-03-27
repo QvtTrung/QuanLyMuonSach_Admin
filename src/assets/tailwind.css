@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+#phone::-webkit-inner-spin-button,
+#phone::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#phone {
+    -moz-appearance: textfield;
+}
